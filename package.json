@@ -1,0 +1,51 @@
+{
+  "name": "express-prisma-auth",
+  "version": "1.0.0",
+  "author": "Rameen Khan",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "dependencies": {
+    "@prisma/client": "^5.16.2",
+    "bcryptjs": "^2.4.3",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "prisma": "^5.16.2"
+  },
+  "scripts": {
+    "build": "npx tsc",
+    "lint": "eslint \"**/*.{js,ts}\" --quiet",
+    "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rkhan06/express-prisma-auth.git"
+  },
+  "keywords": [
+    "express",
+    "prisma",
+    "authentication",
+    "jwt",
+    "typescript",
+    "auth"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "^9.6.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/eslint__js": "^8.42.3",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/node": "^20.14.10",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "nodemon": "^3.1.4",
+    "prettier": "^3.3.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3",
+    "typescript-eslint": "^7.16.0"
+  }
+}
