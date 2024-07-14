@@ -24,16 +24,16 @@ export class AuthLibrary {
     };
     this.identifierField = options.identifierField;
 
-    // Validate if the User model exists
-    validateUserModel(prisma)
-      .then((exists: boolean) => {
+    // Validate if the User model exists and contains the necessary fields
+    validateUserModel(prisma, this.identifierField)
+      .then((exists) => {
         if (!exists) {
           throw new Error(
-            "User model does not exist in your Prisma schema. Please define it."
+            `User model does not exist or does not contain the required fields (${this.identifierField}, password). Please define it in your Prisma schema.`
           );
         }
       })
-      .catch((err: { message: string }) => {
+      .catch((err) => {
         throw new Error(`Error validating User model: ${err.message}`);
       });
   }
