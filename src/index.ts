@@ -2,6 +2,7 @@ import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import authRoutes, { AuthRoutesConfig } from "./authRoutes";
 import { validateUserModel } from "./utils";
+import { authMiddleware } from "./authMiddleware";
 
 export interface AuthLibraryOptions {
   jwtSecret: string;
@@ -38,7 +39,7 @@ export class AuthLibrary {
       });
   }
 
-  public getMiddleware(): Router {
+  public getAuthRoutes(): Router {
     const router = Router();
     authRoutes(
       router,
@@ -48,5 +49,9 @@ export class AuthLibrary {
       this.identifierField
     );
     return router;
+  }
+
+  public getAuthMiddleware() {
+    return authMiddleware(this.jwtSecret);
   }
 }
