@@ -2,13 +2,12 @@ import { PrismaClient } from "@prisma/client";
 
 export const validateUserModel = async (
   prisma: PrismaClient,
-  identifierField: "email" | "username"
 ): Promise<boolean> => {
   try {
     const modelExists = await prisma.$queryRaw`
       SELECT 1
       FROM information_schema.tables
-      WHERE table_name = 'User'
+      WHERE table_name = 'users'
     `;
 
     if (modelExists.length === 0) {
@@ -19,10 +18,10 @@ export const validateUserModel = async (
     const userFields = await prisma.$queryRaw`
       SELECT column_name
       FROM information_schema.columns
-      WHERE table_name = 'User'
+      WHERE table_name = 'users'
     `;
 
-    const requiredFields = [identifierField, "password"];
+    const requiredFields = ["email", "password"];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const fieldNames = userFields.map((field: any) => field.column_name);
 

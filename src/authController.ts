@@ -1,65 +1,112 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import { generateToken } from "./jwt";
+import {
+  generateToken,
+  verifyRefreshToken,
+  regenerateAccessToken,
+} from "./jwt";
+import { JwtPayloadWithUserId } from "./types";
 
-export const register =
-  (
-    prisma: PrismaClient,
-    jwtSecret: string,
-    identifierField: "email" | "username"
-  ) =>
+export const signup =
+  (prisma: PrismaClient, jwtSecret: string, refreshSecret: string) =>
   async (req: Request, res: Response) => {
-    const { email, username, password, ...rest } = req.body;
-    const identifierValue = identifierField === "email" ? email : username;
+    const { email, password, ...rest } = req.body;
 
-    if (!identifierValue) {
-      return res.status(400).json({ error: `Missing ${identifierField}` });
+    if (!email) {
+      return res.status(400).json({ error: `Email is required` });
+    }
+
+    if (!password) {
+      return res.status(400).json({ error: `Password is required` });
     }
 
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
       const user = await prisma.user.create({
         data: {
-          [identifierField]: identifierValue,
+          email,
           password: hashedPassword,
           ...rest,
         },
       });
 
-      const token = generateToken(user.id, jwtSecret);
-      res.status(201).json({ token });
+      const { accessToken, refreshToken } = generateToken(
+        user.id,
+        jwtSecret,
+        refreshSecret,
+      );
+      res.status(200).json({ accessToken, refreshToken });
     } catch (error) {
-      res.status(500).json({ error: "User registration failed" });
+      res.status(500).json({ success: false, message: "User sign up failed" });
     }
   };
 
 export const login =
-  (
-    prisma: PrismaClient,
-    jwtSecret: string,
-    identifierField: "email" | "username"
-  ) =>
+  (prisma: PrismaClient, jwtSecret: string, refreshSecret: string) =>
   async (req: Request, res: Response) => {
-    const { email, username, password } = req.body;
-    const identifierValue = identifierField === "email" ? email : username;
+    const { email, password } = req.body;
 
-    if (!identifierValue) {
-      return res.status(400).json({ error: `Missing ${identifierField}` });
+    if (!email) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Email is required" });
+    }
+
+    if (!password) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Password is required" });
     }
 
     try {
       const user = await prisma.user.findUnique({
-        where: { [identifierField]: identifierValue },
+        where: { email },
       });
 
       if (!user || !(await bcrypt.compare(password, user.password))) {
-        return res.status(401).json({ error: "Invalid credentials" });
+        return res
+          .status(401)
+          .json({ success: false, message: "Invalid email or password" });
       }
 
-      const token = generateToken(user.id, jwtSecret);
-      res.status(200).json({ token });
+      const { accessToken, refreshToken } = generateToken(
+        user.id,
+        jwtSecret,
+        refreshSecret,
+      );
+      res.status(200).json({ accessToken, refreshToken });
     } catch (error) {
-      res.status(500).json({ error: "User login failed" });
+      res.status(500).json({ success: false, message: "User login failed" });
+    }
+  };
+
+export const refreshToken =
+  (prisma: PrismaClient, jwtSecret: string, refreshSecret: string) =>
+  async (req: Request, res: Response) => {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(401).json({ error: "Refresh token is required" });
+    }
+
+    try {
+      const decoded = verifyRefreshToken(
+        refreshToken,
+        refreshSecret,
+      ) as JwtPayloadWithUserId;
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+      });
+
+      if (!user) {
+        return res.status(401).json({ error: "Invalid refresh token" });
+      }
+
+      const newAccessToken = regenerateAccessToken(user.id, jwtSecret);
+
+      res.json({ accessToken: newAccessToken });
+    } catch (error) {
+      res.status(401).json({ error: "Invalid refresh token" });
     }
   };

@@ -1,7 +1,11 @@
+import jwt from "jsonwebtoken";
 export interface User {
-  id: number;
+  id: number | string;
   email?: string;
-  username?: string;
   password: string;
   [key: string]: unknown;
+}
+
+export interface JwtPayloadWithUserId extends jwt.JwtPayload {
+  userId: number | string;
 }

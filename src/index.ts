@@ -6,31 +6,31 @@ import { authMiddleware } from "./authMiddleware";
 
 export interface AuthLibraryOptions {
   jwtSecret: string;
-  routes?: AuthRoutesConfig;
-  identifierField: "email" | "username";
+  refreshSecret: string;
 }
 
 export class AuthLibrary {
   private prisma: PrismaClient;
   private jwtSecret: string;
+  private refreshSecret: string;
   private routes: AuthRoutesConfig;
-  private identifierField: "email" | "username";
 
   constructor(prisma: PrismaClient, options: AuthLibraryOptions) {
     this.prisma = prisma;
     this.jwtSecret = options.jwtSecret;
-    this.routes = options.routes || {
-      register: "/register",
+    this.refreshSecret = options.refreshSecret;
+    this.routes = {
+      signup: "/signup",
       login: "/login",
+      refreshToken: "/refresh-token",
     };
-    this.identifierField = options.identifierField;
 
     // Validate if the User model exists and contains the necessary fields
-    validateUserModel(prisma, this.identifierField)
+    validateUserModel(prisma)
       .then((exists) => {
         if (!exists) {
           throw new Error(
-            `User model does not exist or does not contain the required fields (${this.identifierField}, password). Please define it in your Prisma schema.`
+            `User model does not exist or does not contain the required fields (email, password). Please define it in your Prisma schema.`,
           );
         }
       })
@@ -45,8 +45,8 @@ export class AuthLibrary {
       router,
       this.prisma,
       this.jwtSecret,
+      this.refreshSecret,
       this.routes,
-      this.identifierField
     );
     return router;
   }

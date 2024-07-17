@@ -1,21 +1,26 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
-import { register, login } from "./authController";
+import { signup, login, refreshToken } from "./authController";
 
 export interface AuthRoutesConfig {
-  register: string;
+  signup: string;
   login: string;
+  refreshToken: string;
 }
 
 const authRoutes = (
   router: Router,
   prisma: PrismaClient,
   jwtSecret: string,
+  refreshSecret: string,
   routes: AuthRoutesConfig,
-  identifierField: "email" | "username"
 ) => {
-  router.post(routes.register, register(prisma, jwtSecret, identifierField));
-  router.post(routes.login, login(prisma, jwtSecret, identifierField));
+  router.post(routes.signup, signup(prisma, jwtSecret, refreshSecret));
+  router.post(routes.login, login(prisma, jwtSecret, refreshSecret));
+  router.post(
+    routes.refreshToken,
+    refreshToken(prisma, jwtSecret, refreshSecret),
+  );
 };
 
 export default authRoutes;
