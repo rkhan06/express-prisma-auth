@@ -37,10 +37,7 @@ constructor(prisma: PrismaClient, options: AuthLibraryOptions)
 The `AuthLibrary` constructor accepts an `AuthLibraryOptions` object with the following properties:
 
 - `jwtSecret` (string, required): Secret key for signing JWT tokens. This is used to encrypt and decrypt the JWT tokens. Ensure this key is kept secure.
-- `routes` (object, optional): Custom routes for registration and login. This allows you to define custom endpoint paths for user registration and login.
-  - `register` (string, optional): The route path for user registration. Default is `'/register'`.
-  - `login` (string, optional): The route path for user login. Default is `'/login'`.
-- `identifierField` (string, required): Field used for user identification, either `'email'` or `'username'`. This determines whether the user will register and login using an email address or a username.
+- `refreshSecret` (string, required): Secret key for regenerating JWT tokens. Ensure this key is kept secure.
 
 ## Example User Schema
 
@@ -57,12 +54,14 @@ datasource db {
 }
 
 model User {
-  id        Int    @id @default(autoincrement())
-  email     String @unique
-  username  String
-  password  String
+  id        Int    @id @default(autoincrement()) // required
+  email     String @unique // required
+  password  String // required
   firstName String
   lastName  String
+  ...
+
+  @@map("users") // make sure the table is defined as "users"
 }
 ```
 
@@ -94,12 +93,8 @@ app.use(express.json());
 
 const prismaClient = new PrismaClient();
 const authLibrary = new AuthLibrary(prismaClient, {
-  jwtSecret: process.env.JWT_SECRET || "secret",
-  routes: {
-    register: "/signup",
-    login: "/signin",
-  },
-  identifierField: "email", // or 'username'
+  jwtSecret: process.env.JWT_SECRET as string,
+  refreshSecret: process.env.REFRESH_SECRET as string,
 });
 
 // Use the authentication routes
@@ -120,3 +115,28 @@ app.listen(5001, () => {
 
 export default app;
 ```
+
+## Available Routes
+
+### The AuthLibrary provides the following routes by default:
+
+#### POST /signup
+
+  - Description: Registers a new user.
+  - Request Body:
+    - email (string, required): The user’s email.
+    - password (string, required): The user’s password.
+    - Other optional fields as defined in your Prisma schema (e.g., firstName, lastName).
+
+#### POST /login
+
+  - Description: Authenticates an existing user.
+  - Request Body:
+    - email (string, required): The user’s email.
+    - password (string, required): The user’s password.
+
+#### POST /refresh-token
+
+  - Description: Refreshes the access token using a refresh token.
+  - Request Body:
+    - refreshToken (string, required): The refresh token.
