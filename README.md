@@ -122,11 +122,14 @@ export default app;
 
 #### POST /signup
 
-  - Description: Registers a new user.
+  - Description: Creates a new user.
   - Request Body:
     - email (string, required): The user’s email.
     - password (string, required): The user’s password.
     - Other optional fields as defined in your Prisma schema (e.g., firstName, lastName).
+  - Response Body:
+    - success (boolean): Indicates whether the request was successful.
+    - message (string): The response message
 
 #### POST /login
 
@@ -134,9 +137,18 @@ export default app;
   - Request Body:
     - email (string, required): The user’s email.
     - password (string, required): The user’s password.
+  - Response Body:
+    - success (boolean): Indicates whether the request was successful.
+    - data (object): Contains the response data.
+      - token (string): Access token to be used for authenticated requests.
+      - refreshToken (string): The refresh token to be used for obtaining a new access token.
 
 #### POST /refresh-token
 
   - Description: Refreshes the access token using a refresh token.
   - Request Body:
     - refreshToken (string, required): The refresh token.
+  - Response Body:
+    - success (boolean): Indicates whether the request was successful.
+    - data (object): Contains the response data.
+      - token (string): New access token to be used for authenticated requests.
