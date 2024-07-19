@@ -9,7 +9,7 @@ import {
 import { JwtPayloadWithUserId } from "./types";
 
 export const signup =
-  (prisma: PrismaClient, jwtSecret: string, refreshSecret: string) =>
+  (prisma: PrismaClient) =>
   async (req: Request, res: Response) => {
     const { email, password, ...rest } = req.body;
 
@@ -23,7 +23,7 @@ export const signup =
 
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
-      const user = await prisma.user.create({
+      await prisma.user.create({
         data: {
           email,
           password: hashedPassword,
@@ -31,12 +31,7 @@ export const signup =
         },
       });
 
-      const { accessToken, refreshToken } = generateToken(
-        user.id,
-        jwtSecret,
-        refreshSecret,
-      );
-      res.status(200).json({ accessToken, refreshToken });
+      res.status(201).json({ success: true, message: "User created successfully" });
     } catch (error) {
       res.status(500).json({ success: false, message: "User sign up failed" });
     }
@@ -75,7 +70,7 @@ export const login =
         jwtSecret,
         refreshSecret,
       );
-      res.status(200).json({ accessToken, refreshToken });
+      res.status(200).json({ success: true, data: { token: accessToken, refreshToken} });
     } catch (error) {
       res.status(500).json({ success: false, message: "User login failed" });
     }
@@ -100,13 +95,13 @@ export const refreshToken =
       });
 
       if (!user) {
-        return res.status(401).json({ error: "Invalid refresh token" });
+        return res.status(401).json({ error: "Invalid token" });
       }
 
       const newAccessToken = regenerateAccessToken(user.id, jwtSecret);
 
-      res.json({ accessToken: newAccessToken });
+      res.json({ success: true, data: { token: newAccessToken }});
     } catch (error) {
-      res.status(401).json({ error: "Invalid refresh token" });
+      res.status(401).json({ success: false, message: "Invalid token" });
     }
   };

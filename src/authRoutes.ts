@@ -15,7 +15,7 @@ const authRoutes = (
   refreshSecret: string,
   routes: AuthRoutesConfig,
 ) => {
-  router.post(routes.signup, signup(prisma, jwtSecret, refreshSecret));
+  router.post(routes.signup, signup(prisma));
   router.post(routes.login, login(prisma, jwtSecret, refreshSecret));
   router.post(
     routes.refreshToken,
